@@ -1,0 +1,15 @@
+secret
+dags/variables
+.vscode
+.cfg
+*trial*
+test*
+*old*
+logs
+youtube*
+example*
+temp*
+*edit*
+sql_dwh*
+*.csv
+*.cfg
