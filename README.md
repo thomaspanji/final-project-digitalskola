@@ -4,12 +4,12 @@ This is an individual project in Data Engineer bootcamp given by [DigitalSkola](
 
 As it is called, Google Cloud Storage (GCS) is used to store our data, such as raw files and staging files. Google Composer is a fully-managed Apache Airflow. Google Dataproc is used to host Apache Spark and all Hadoop enviroments. At last, Google BigQuery is used to store our data warehouse tables. Here is the archicture for the project.
 
-![architecure_on_gcp](/src/architecture.png)
+![architecure_on_gcp](/img/architecture.png)
 
 In this repository, I am not going to explain step-by-step initializing the project. I will focus about authoring workflow and scheduling it to run automatically. However, I will explain the architecture I used in this project on another repository soon.
 
 The workflow that I will create is described in this picture.
-![workflow](/src/workflow.png)
+![workflow](/img/workflow.png)
 
 Main thing on the workflow is you process raw files and convert it into Parquet format, save it in the storage, then create external tables which will be processed further to create data warehouse.
 
