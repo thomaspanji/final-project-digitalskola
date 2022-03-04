@@ -1,5 +1,4 @@
 secret
-dags/variables
 .vscode
 .cfg
 *trial*
@@ -14,3 +13,4 @@ sql_dwh*
 *.csv
 *.cfg
 *.zip
+sql

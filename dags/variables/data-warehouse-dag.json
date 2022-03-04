@@ -1,0 +1,44 @@
+{
+    "data-warehouse-dag" : {
+        "project_id" : "final-project-de",
+        "dataproc" : {
+            "project_id" : "final-project-de",
+            "region" : "us-west1",
+            "cluster_name" : "cluster-final-project",
+            "zone" : "us-west1-a",
+            "num_workers" : 0,
+            "master_machine" : "n1-standard-4",
+            "worker_machine" : "n1-standard-2",
+            "master_disk_size" : 500,
+            "worker_disk_size" : 500
+        },
+        "bq" : {
+            "bq_conn_id" : "bigquery_default",
+            "project_id" : "final-project-de",
+            "staging_dataset": "final_project_staging",
+            "dwh_dataset" : "final_project_dwh",
+            "source_file": "",
+            "destination_file" : ""
+        },
+        "gcs" : {
+            "gcs_conn_id" : "google_cloud_storage_default",
+            "main_bucket" : "us-central1-final-project-d-b229f7be-bucket",
+            "source_bucket" : "final_project_de",
+            "code" : "us-central1-final-project-d-b229f7be-bucket/spark",
+            "files": [
+                "uscountry",
+                "immigration_data_sample",
+                "usport",
+                "usstate",
+                "globallandtemperaturebycity",
+                "us-cities-demographics-edit",
+                "airport-codes_csv",
+                "orders"
+            ]
+        },
+        "slack" : {
+            "slack_conn_id" : "slack_default"
+        }
+
+    }
+}
