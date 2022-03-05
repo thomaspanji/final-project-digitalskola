@@ -16,16 +16,16 @@ def read(filename,sep=None):
 
     if sep is None:
         df = spark.read \
-                .option('header', 'true') \
-                .option('inferSchema', 'true') \
-                .csv(f'gs://final_project_de/input/{filename}.csv')
+            .option('header', 'true') \
+            .option('inferSchema', 'true') \
+            .csv(f'gs://final_project_de/input/{filename}.csv')
 
     else:
         df = spark.read \
-        .option('sep', sep) \
-        .option('header', 'true') \
-        .option('inferSchema', 'true') \
-        .csv(f'gs://final_project_de/input/{filename}.csv')
+            .option('sep', sep) \
+            .option('header', 'true') \
+            .option('inferSchema', 'true') \
+            .csv(f'gs://final_project_de/input/{filename}.csv')
 
     # Printing Spark DataFrame inferred schema
     df.printSchema()
@@ -40,16 +40,16 @@ def write(filename, df=None, partitionBy=None):
     added prefix 'staging/'.
     """
     
-    # Rename the filename for written to Parquet with the same format
+    # Create filename for written to Parquet
     filename = filename.replace('-', '_').lower()
     print(f'Writing to Parquet with name {filename}.parquet ....')
     
-    if df is None:
-        df_to_parquet = read(filename)
-    else:
+    if df is not None:
         df_to_parquet = df
+    else:
+        df_to_parquet = read(filename)
 
-    if partitionBy is None:
+    if partitionBy is not None:
         df_to_parquet.write \
             .mode('overwrite') \
             .parquet(f'gs://final_project_de/staging/{filename}.parquet')
