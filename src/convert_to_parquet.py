@@ -49,7 +49,7 @@ def write(filename, df=None, partitionBy=None):
     else:
         df_to_parquet = read(filename)
 
-    if partitionBy is not None:
+    if partitionBy is None:
         df_to_parquet.write \
             .mode('overwrite') \
             .parquet(f'gs://final_project_de/staging/{filename}.parquet')
