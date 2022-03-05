@@ -40,9 +40,9 @@ def write(filename, df=None, partitionBy=None):
     added prefix 'staging/'.
     """
     
-    # Rename the filename written to Parquet with the same format
+    # Rename the filename for written to Parquet with the same format
     filename = filename.replace('-', '_').lower()
-    print('Writing to Parquet with name {filename}.parquet ....')
+    print(f'Writing to Parquet with name {filename}.parquet ....')
     
     if df is None:
         df_to_parquet = read(filename)
