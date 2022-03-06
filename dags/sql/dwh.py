@@ -9,7 +9,6 @@ STAGING = bigquery['staging_dataset']
 DWH = bigquery['dwh_dataset']
 
 
-
 DWH_IMMIGRATION = f"""  
     CREATE OR REPLACE TABLE {DWH}.f_immigration_data
     OPTIONS(
@@ -17,16 +16,16 @@ DWH_IMMIGRATION = f"""
     ) AS
     SELECT
       cicid,
-      visapost AS country_of_origin,
+      i94res AS country_of_origin,
       i94port AS port_name,
       DATE_ADD(DATE "1960-01-01", INTERVAL CAST(arrdate AS INT) day) AS arrival_date,
       CAST(i94mode AS STRING) AS arrival_mode,
       i94addr AS destination_state,
       DATE_ADD(DATE "1960-01-01", INTERVAL CAST(depdate AS INT) day) AS departure_date,
-      CAST(i94bir AS numeric) AS age,
-      CAST(i94visa AS string) AS visa_category,
+      CAST(i94bir AS NUMERIC) AS age,
+      CAST(i94visa AS STRING) AS visa_category,
       gender,
-      CAST(biryear AS numeric) AS birth_year,
+      CAST(biryear AS NUMERIC) AS birth_year,
       visatype AS visa_type
     FROM {PROJECT_ID}.{STAGING}.immigration_data_sample;
 """
@@ -49,7 +48,7 @@ DWH_TIME = f"""
     ) AS
     SELECT
       date,
-      EXTRACT(DAY FROM date)AS day,
+      EXTRACT(DAY FROM date) AS day,
       EXTRACT(MONTH FROM date) AS month,
       EXTRACT(YEAR FROM date) AS year,
       EXTRACT(QUARTER FROM date) AS quarter,
@@ -119,9 +118,9 @@ DWH_DEMO = f"""
           state AS state_name,
           statecode AS state_id,
           medianage AS median_age,
-          malepopulation AS male_population,
-          femalepopulation AS female_population,
-          foreignborn AS foreign_born,
+          CAST(malepopulation AS NUMERIC) AS male_population,
+          CAST(femalepopulation AS NUMERIC) AS female_population,
+          CAST(foreignborn AS NUMERIC) AS foreign_born,
           count,
           CASE
           WHEN race = 'White' THEN 'white_population'
@@ -145,4 +144,12 @@ DWH_DEMO = f"""
     );
 """
 
-
+query_list = [
+    ("immigration", DWH_IMMIGRATION),
+    ("weather", DWH_WEATHER),
+    ("demo", DWH_DEMO),
+    ("country", DWH_COUNTRY),
+    ("port", DWH_PORT),
+    ("state", DWH_STATE),
+    ("time", DWH_TIME)
+]
