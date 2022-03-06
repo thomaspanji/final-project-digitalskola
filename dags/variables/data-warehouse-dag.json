@@ -3,7 +3,6 @@
         "description": "Convert CSV files to PARQUET format, make external tables as staging phase, and create data warehouse in Google BigQuery",
         "project_id" : "final-project-de",
         "dataproc" : {
-            "project_id" : "final-project-de",
             "region" : "us-west1",
             "cluster_name" : "cluster-final-project",
             "zone" : "us-west1-a",
@@ -15,7 +14,6 @@
         },
         "bq" : {
             "bq_conn_id" : "bigquery_default",
-            "project_id" : "final-project-de",
             "staging_dataset": "final_project_staging",
             "dwh_dataset" : "final_project_dwh"
         },
