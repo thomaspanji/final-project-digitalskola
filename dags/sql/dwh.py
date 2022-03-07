@@ -4,7 +4,7 @@ from airflow.models import Variable
 DAG_ID = 'data-warehouse-dag'
 config = Variable.get(DAG_ID, deserialize_json=True)
 bigquery = config['bq']
-PROJECT_ID = bigquery['project_id']
+PROJECT_ID = config['project_id']
 STAGING = bigquery['staging_dataset']
 DWH = bigquery['dwh_dataset']
 
@@ -58,7 +58,8 @@ DWH_TIME = f"""
       SELECT 
         distinct(arrival_date) AS date 
       FROM {PROJECT_ID}.{DWH}.f_immigration_data
-    );
+    )
+    ORDER BY 1;
 """
 
 DWH_PORT = f"""
@@ -141,7 +142,9 @@ DWH_DEMO = f"""
         'latino_population',
         'native_population'
         )
-    );
+    )
+    ORDER BY
+      2,1;
 """
 
 query_list = [

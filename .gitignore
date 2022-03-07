@@ -2,7 +2,7 @@ secret
 .vscode
 .cfg
 *trial*
-test*
+*test*
 *old*
 logs
 youtube*
@@ -13,4 +13,3 @@ sql_dwh*
 *.csv
 *.cfg
 *.zip
-sql
