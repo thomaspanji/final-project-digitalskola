@@ -7,32 +7,22 @@ from datetime import datetime
 from datetime import timedelta
 
 from sql.dwh import *
+from sql.dwh import query_list
 
 from airflow import DAG
 from airflow.models import Variable
 from airflow.utils import trigger_rule
-from airflow.utils.task_group import TaskGroup
-
 from airflow.operators.dummy import DummyOperator
-from airflow.operators.bash import BashOperator
-from airflow.operators.python import PythonOperator
-
 from airflow.providers.google.cloud.operators.dataproc import (
     DataprocCreateClusterOperator,
     DataprocDeleteClusterOperator,
     DataprocSubmitPySparkJobOperator
 )
-from airflow.providers.google.cloud.operators.gcs import (
-    GCSListObjectsOperator,
-    GCSDeleteObjectsOperator
-)
-from airflow.providers.google.cloud.transfers.gcs_to_bigquery import (
-    GCSToBigQueryOperator
-)
 from airflow.providers.google.cloud.operators.bigquery import (
+    BigQueryCreateExternalTableOperator,
     BigQueryInsertJobOperator
 )
-from airflow.providers.slack.operators.slack import SlackAPIPostOperator
+
 
 # Global configuration
 DAG_ID = 'data-warehouse-dag'
@@ -43,6 +33,7 @@ bigquery = config['bq']
 gcs = config['gcs']
 
 PROJECT_ID = config['project_id']
+DAG_DESC = config['description']
 
 # Cluster setting for Dataproc
 REGION = cluster['region']
@@ -67,33 +58,10 @@ STAGING = bigquery['staging_dataset']
 DWH = bigquery['dwh_dataset']
 
 # External file
-SPARK_CONVERT_PARQUET_URI = f'gs://{BUCKET}/src/convert_to_parquet.py'
+SPARK_CONVERT_PARQUET_URI = gcs['pyspark_file']
 
-# List tablename
+# List filename
 FILES = gcs['files']
-
-filenames = [
-                ("uscountry", "UScountry"),
-                ("immigration_data_sample", "immigration_data_sample"),
-                ("usport","USPORT"),
-                ("usstate", "USSTATE"),
-                ("globallandtemperaturesbycity", "GlobalLandTemperatureByCity"),
-                ("us_cities_demographics","us-cities-demographics"),
-                ("airport_codes_csv","airport-codes_csv"),
-                ("orders","orders")
-            ]
-
-# List query
-query_list = [
-    ('immigration', DWH_IMMIGRATION),
-    ('weather', DWH_WEATHER),
-    ('demo', DWH_DEMO),
-    ('country', DWH_COUNTRY),
-    ('port', DWH_PORT),
-    ('state', DWH_STATE),
-    ('time', DWH_TIME)
-]
-
 
 # Default arguments
 default_args = {
@@ -109,23 +77,19 @@ default_args = {
 
 with DAG(
     dag_id = DAG_ID,
-    description='''
-    Convert CSV files to PARQUET format, transfer it into staging and 
-    create data warehouse in Google BigQuery''',
-    schedule_interval = None,
+    description=DAG_DESC,
+    schedule_interval = None,  # triggered manually
     default_args=default_args,
     catchup=False,
-    tags=['final-project','digitalskola','testing']
+    tags=['final-project','digitalskola']
 ) as dag:
 
-    start_task = BashOperator(
+    start_task = DummyOperator(
         task_id='start_process',
-        bash_command='echo "Start at $(date)"'
     )
 
-    end_task = BashOperator(
+    end_task = DummyOperator(
         task_id='end_process',
-        bash_command='echo "Finish at $(date)"'
     )
 
     create_cluster = DataprocCreateClusterOperator(
@@ -149,41 +113,31 @@ with DAG(
         trigger_rule=trigger_rule.TriggerRule.ALL_DONE
     )
 
-    finish_transfer = DummyOperator(
-        task_id='reporting_finish_transfer'
-    )
-
-    start_dwh = DummyOperator(
-        task_id='starting_data_warehouse_process'
-    )
-
-    # delete_parquet = GCSDeleteObjectsOperator(
-    #     task_id='delete_parquet_files',
-    #     bucket_name=f'{RAW}',
-    #     prefix='staging/',
-    #     gcp_conn_id=GCS_CONN_ID,
-    # )
-
     create_parquet = DataprocSubmitPySparkJobOperator(
         task_id='create_parquet_file',
         cluster_name=CLUSTER_NAME,
         main=SPARK_CONVERT_PARQUET_URI,
         project_id=PROJECT_ID,
-        region=REGION,
+        region=REGION
     )
 
-    transfer_staging = [GCSToBigQueryOperator(
-        task_id=f'move_{new}_to_bigquery',
+    finish_create_table = DummyOperator(
+        task_id='finish_create_external_tables'
+    )
+
+    start_dwh = DummyOperator(
+        task_id='start_data_warehousing'
+    )
+
+    create_external_table = [BigQueryCreateExternalTableOperator(
+        task_id=f'create_external_table_{name}_in_bigquery',
         bucket=f'{RAW}',
-        source_objects=[f'staging/{new}.parquet/part*'],
+        source_objects=[f'staging/{name}.parquet/part*'],
         source_format='PARQUET',
-        destination_project_dataset_table=f'{PROJECT_ID}:{STAGING}.{new}',
-        create_disposition='CREATE_IF_NEEDED',
-        write_disposition='WRITE_TRUNCATE',
+        destination_project_dataset_table=f'{PROJECT_ID}.{STAGING}.{name}',
         bigquery_conn_id=BQ_CONN_ID,
-        google_cloud_storage_conn_id=GCS_CONN_ID,
-        autodetect=True   
-    ) for new, _ in filenames]
+        google_cloud_storage_conn_id=GCS_CONN_ID  
+    ) for name in FILES]
    
     create_dwh = [BigQueryInsertJobOperator(
         task_id=f'create_dwh_for_table_{name}',
@@ -196,15 +150,8 @@ with DAG(
         }
     ) for name, query in query_list]
 
-    # slack_op = SlackAPIPostOperator(
-    #     task_id='test-slack',
-    #     channel='#random',
-    #     username='Airflow for Slack',
-    #     text="Hurray it's works!"
-    # )
-
-    # Set dependencies
+    # Set task dependencies
     start_task >> create_cluster >> create_parquet >> delete_cluster >> end_task
-    create_parquet >> transfer_staging >> finish_transfer
-    finish_transfer >> start_dwh >> create_dwh >> end_task
+    create_parquet >> create_external_table >> finish_create_table
+    finish_create_table >> start_dwh >> create_dwh >> end_task
 
