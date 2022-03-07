@@ -39,15 +39,15 @@ def write(filename, df=None, partitionBy=None):
     The Parquet file is saved into Google Cloud Storage as staging phase with 
     added prefix 'staging/'.
     """
-    
-    # Create filename for written to Parquet
-    filename = filename.replace('-', '_').lower()
-    print(f'Writing to Parquet with name {filename}.parquet ....')
-    
+        
     if df is not None:
         df_to_parquet = df
     else:
         df_to_parquet = read(filename)
+
+    # Create filename for written to Parquet
+    filename = filename.replace('-', '_').lower()
+    print(f'Writing to Parquet with name {filename}.parquet ....')
 
     if partitionBy is None:
         df_to_parquet.write \
