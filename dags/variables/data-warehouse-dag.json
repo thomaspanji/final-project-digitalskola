@@ -21,6 +21,7 @@
             "gcs_conn_id" : "google_cloud_storage_default",
             "main_bucket" : "us-central1-final-project-d-b229f7be-bucket",
             "source_bucket" : "final_project_de",
+            "pyspark_file" : "gs://us-central1-final-project-d-b229f7be-bucket/src/convert_to_parquet.py",
             "files": [
                 "uscountry",
                 "immigration_data_sample",
